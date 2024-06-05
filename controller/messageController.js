@@ -1,6 +1,6 @@
 const Message = require('../models/messageSchema');
-
-const sendMessage = async (req, res) => {
+const catchAsyncError = require('../middlewares/catchAsyncErrors')
+const sendMessage = catchAsyncError(async (req, res) => {
     try {
         const { firstName, lastName, email, phone, message } = req.body;
 
@@ -24,6 +24,6 @@ const sendMessage = async (req, res) => {
             error: "An error occurred while sending the message."
         });
     }
-};
+});
 
 module.exports = sendMessage;
