@@ -1,6 +1,8 @@
 const express = require('express');
-const messageController = require('../controller/messageController');
-const router = express.Router();
-router.post('/message', messageController);
+const {sendMessage, getAllMessages} = require('../controller/messageController');
+const { isAdminAuthenticated } = require('../middlewares/auth');
 
+const router = express.Router();
+router.post('/message', sendMessage);
+router.get('/getAll',isAdminAuthenticated, getAllMessages)
 module.exports = router;

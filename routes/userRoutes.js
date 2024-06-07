@@ -6,7 +6,8 @@ const {
     getAllDoctor,
     getUser,
     adminLogout,
-    userLogout
+    userLogout,
+    doctorDetails
 } = require('../controller/userController');
 const {
     isAdminAuthenticated,
@@ -29,5 +30,6 @@ router.get('/admin-logout', isAdminAuthenticated, adminLogout)
 
 // Doctor routes
 router.get('/doctors', getAllDoctor);
+router.post('/doctor/details', isAdminAuthenticated, doctorDetails);
 
 module.exports = router;

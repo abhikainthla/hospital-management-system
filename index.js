@@ -3,10 +3,17 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2; 
 const messageRoutes = require('./routes/messageRoutes');
 const userRoutes = require('./routes/userRoutes');
+const appointmentRoutes = require('./routes/appointmentRoutes');
 require('dotenv').config();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -39,14 +46,10 @@ mongoose.connect(process.env.MONGO_URL, {
     console.log("Error connecting to database: " + err);
 });
 
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 app.use( messageRoutes);
 app.use( userRoutes);
+app.use( appointmentRoutes)
 
 app.listen(PORT, (err) => {
     if (err) {

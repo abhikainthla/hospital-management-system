@@ -1,7 +1,15 @@
 const User = require('../models/userSchema');
 const generateToken = require('../utils/jwtToken');
+const cloudinary = require('cloudinary').v2; 
+require('dotenv').config();
 
-// Create a new user
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+
 const userDetails = async (req, res) => {
     try {
         const { firstName, lastName, email, phone, dob, role, password, gender } = req.body;
@@ -99,8 +107,8 @@ const getAllDoctor = async (req, res) => {
             doctors
         });
     } catch (error) {
-        console.log("error"+error)
-        res.status(404).json({ error: "Something went wrong" });
+        console.error("Error fetching doctors:", error);
+        res.status(500).json({ error: "Something went wrong" });
     }
 };
 
@@ -113,44 +121,84 @@ const getUser = async (req, res) => {
             user,
         });
     } catch (error) {
-        console.log("error"+error)
-        res.status(404).json({ error: "Something went wrong" });
+        console.error("Error fetching user:", error);
+        res.status(500).json({ error: "Something went wrong" });
     }
 };
 
-const adminLogout = async (req, res)=>{
+// Admin logout
+const adminLogout = async (req, res) => {
     try {
-        res.status(200).cookie("adminToken", "",{
-            httpOnly:true,
+        res.status(200).cookie("adminToken", "", {
+            httpOnly: true,
             expires: new Date(Date.now())
-        }
-
-        ).json({
-            "success":true,
-            "message":"Admin logged out successfully!",
-        })
-    }
-    catch(error){
-        console.log("error"+error)
-        res.status(404).json({error: "Something went wrong!"})
+        }).json({
+            success: true,
+            message: "Admin logged out successfully!",
+        });
+    } catch (error) {
+        console.error("Error logging out admin:", error);
+        res.status(500).json({ error: "Something went wrong!" });
     }
 };
 
-const userLogout = async (req, res)=>{
+// User logout
+const userLogout = async (req, res) => {
     try {
-        res.status(200).cookie("patientToken", "",{
+        res.status(200).cookie("patientToken", "", {
             httpOnly: true,
             expires: new Date(Date.now()),
         }).json({
-            "success":true,
-            "message":"User logged out successfully!",
-        })
-    }
-    catch(error){
-        console.log("error"+error)
-        res.status(404).json({error: "Something went wrong!"})
+            success: true,
+            message: "User logged out successfully!",
+        });
+    } catch (error) {
+        console.error("Error logging out user:", error);
+        res.status(500).json({ error: "Something went wrong!" });
     }
 };
+
+// Create a new doctor
+const doctorDetails = async (req, res) => {
+    try {
+        if (!req.files || Object.keys(req.files).length === 0) { 
+            return res.status(400).json({ error: "docAvatar required" });
+        }
+
+        const { docAvatar } = req.files;
+        const allowedFormats = ['image/png', 'image/jpg', 'image/webp'];
+        if (!allowedFormats.includes(docAvatar.mimetype)) {
+            return res.status(400).json({ error: "File format not supported" });
+        }
+
+        const { firstName, lastName, email, phone, dob, password, gender, doctorDepartment } = req.body;
+        if (!firstName || !lastName || !email || !phone || !dob || !gender || !password || !doctorDepartment) {
+            return res.status(400).json({ error: "Please fill all the fields." });
+        }
+
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ error: "User already registered" });
+        }
+
+        const cloudinaryResponse = await cloudinary.uploader.upload(docAvatar.tempFilePath); 
+        if (!cloudinaryResponse || cloudinaryResponse.error) {
+            console.error("Cloudinary error", cloudinaryResponse.error);
+            return res.status(400).json({ error: "Cloudinary error" });
+        }
+
+        user = await User.create({
+            firstName, lastName, email, phone, dob, role: "doctor", password, gender, doctorDepartment, docAvatar: {
+                public_id: cloudinaryResponse.public_id,
+                url: cloudinaryResponse.secure_url, 
+            }
+        });
+        res.status(200).json({message:"Doctor registered successfully"})
+    } catch (error) {
+        console.error("Error creating doctor:", error);
+        res.status(500).json({ error: "Something went wrong!" });
+    }
+}
 
 module.exports = {
     userDetails,
@@ -159,5 +207,6 @@ module.exports = {
     getAllDoctor,
     getUser,
     adminLogout,
-    userLogout
+    userLogout,
+    doctorDetails
 };
