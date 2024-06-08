@@ -62,4 +62,65 @@ const createAppointment = async (req, res) => {
     }
 };
 
-module.exports = createAppointment;
+const getAppointments = async(req,res)=>{
+    try{
+        const appointments = await Appointment.find();
+        res.status(200).json({success:true, appointments});
+    }
+    catch(error){
+        console.log("Error occured while fecthing appointments", error);
+        res.status(400).json({success:false, error:"Error occured while fecthing appointments"});
+    }
+}
+
+const updateAppointmentStatus = async(req, res)=>{
+    try{
+    const {id} = req.params;
+    let appointment = await Appointment.find();
+    if(!appointment){
+        return res.status(404).json({error:"Couldn't find any appointment"})
+    }
+    appointment = await Appointment.findByIdAndUpdate(id, req.body, {
+        new : true ,
+        runValidators: true,
+        useFindAndModify: false
+    })
+    res.status(200).json({
+        success:true,
+        message:"Appointment Status Updated",
+        appointment
+    })
+}
+    catch(error){
+        console.log("Something wetn wrong", error);
+        res.status(400).json({error:"Something went wrong"})
+    }
+
+}
+
+const deleteAppointment = async(req, res)=>{
+    try{
+        const {id} = req.params;
+    let appointment = await Appointment.findById(id);
+    if(!appointment){
+        return res.status(404).json({error:"Couldn't find any appointment"})
+    }
+    await appointment.deleteOne();
+    res.status(200).json({
+        success:true,
+        message:"Appointment deleted successfully",
+        appointment
+    })
+    }
+    catch(error){
+        console.log("Something wetn wrong", error);
+        res.status(400).json({error:"Something went wrong"})
+    }
+}
+
+module.exports = {
+    createAppointment,
+    getAppointments,
+    updateAppointmentStatus,
+    deleteAppointment
+};
