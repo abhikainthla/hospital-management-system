@@ -166,7 +166,7 @@ const doctorDetails = async (req, res) => {
         }
 
         const { docAvatar } = req.files;
-        const allowedFormats = ['image/png', 'image/jpg', 'image/webp'];
+        const allowedFormats = ['image/png', 'image/jpeg', 'image/webp'];
         if (!allowedFormats.includes(docAvatar.mimetype)) {
             return res.status(400).json({ error: "File format not supported" });
         }
