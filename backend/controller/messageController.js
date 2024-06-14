@@ -28,7 +28,7 @@ const sendMessage = catchAsyncError(async (req, res) => {
 
 const getAllMessages =catchAsyncError( async(req, res)=>{
     const message = await Message.find()
-        res.status(201).json({success: true, message})
+        res.status(201).json({message})
 })
 
 module.exports = {
